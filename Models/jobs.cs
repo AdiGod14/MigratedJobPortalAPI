@@ -3,13 +3,13 @@ using MongoDB.Bson.Serialization.Attributes;
 using System;
 using System.Collections.Generic;
 
-namespace JobPortalAPI.Models
+namespace MigratedJobPortalAPI.Models
 {
     public class Job
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
-        public string Id { get; set; } // MongoDB _id
+        public string?   Id { get; set; } // MongoDB _id
 
         [BsonElement("title")]
         public string Title { get; set; }

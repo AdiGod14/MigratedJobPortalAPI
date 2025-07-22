@@ -1,15 +1,75 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using MongoDB.Bson.Serialization;
+using MongoDB.Bson.Serialization.Conventions;
+using MigratedJobPortalAPI.Models;
+using MongoDB.Bson.Serialization.Serializers;
+using MongoDB.Bson;
+using MigratedJobPortalAPI;
+using MongoDB.Driver;
+
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Register MongoDB conventions
+var conventionPack = new ConventionPack
+{
+    new IgnoreExtraElementsConvention(true)
+};
+ConventionRegistry.Register("IgnoreExtraElements", conventionPack, _ => true);
 
+// Register enum serializer to store enums as strings in MongoDB
+BsonSerializer.RegisterSerializer(
+    typeof(ApplicationStatus),
+    new ApplicationStatusStringSerializer()
+);
+
+// Read JWT settings from appsettings.json
+var jwtKey = builder.Configuration["Jwt:Key"];
+var jwtIssuer = builder.Configuration["Jwt:Issuer"];
+
+// Add services to the container
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddSingleton<MongoDbContext>();
+
+// Configure JWT authentication
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = false, // Optional: set to true if validating audience
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtIssuer,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+    };
+});
+// Add MongoDB services
+builder.Services.AddSingleton<IMongoClient>(sp =>
+{
+    var connectionString = builder.Configuration["MongoDB:ConnectionString"];
+    return new MongoClient(connectionString);
+});
+
+builder.Services.AddSingleton<IMongoDatabase>(sp =>
+{
+    var client = sp.GetRequiredService<IMongoClient>();
+    var databaseName = builder.Configuration["MongoDB:DatabaseName"];
+    return client.GetDatabase(databaseName);
+});
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Configure middleware
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -18,6 +78,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication(); // <-- Add this to enable JWT auth middleware
 app.UseAuthorization();
 
 app.MapControllers();

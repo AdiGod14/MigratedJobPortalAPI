@@ -1,6 +1,7 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using System;
+using System.Runtime.Serialization;
 
 namespace MigratedJobPortalAPI.Models
 {
@@ -30,7 +31,6 @@ namespace MigratedJobPortalAPI.Models
         public string EmployerId { get; set; }
 
         [BsonElement("status")]
-        [BsonRepresentation(BsonType.String)]
         public ApplicationStatus Status { get; set; } = ApplicationStatus.Applied;
 
         [BsonElement("appliedAt")]
@@ -40,6 +40,7 @@ namespace MigratedJobPortalAPI.Models
     public enum ApplicationStatus
     {
         Applied,
+        [EnumMember(Value = "In Progress")]
         InProgress,
         Accepted,
         Rejected
