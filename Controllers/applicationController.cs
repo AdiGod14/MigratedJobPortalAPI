@@ -1,128 +1,222 @@
-﻿//// Controllers/ApplicationController.cs
-//using Microsoft.AspNetCore.Mvc;
-//using MongoDB.Driver;
-//using MigratedJobPortalAPI.Models;
+﻿using Microsoft.AspNetCore.Mvc;
+using MongoDB.Driver;
+using MongoDB.Bson;
+using MigratedJobPortalAPI.Models;
+using MigratedJobPortalAPI.Utils;
+using System;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using MigratedJobPortalAPI.Services;
 
-//[ApiController]
-//[Route("api/[controller]")]
-//public class ApplicationController : ControllerBase
-//{
-//    private readonly IMongoCollection<Application> _applications;
-//    private readonly IMongoCollection<Job> _jobs;
-//    private readonly IMongoCollection<User> _users;
 
-//    public ApplicationController(IMongoDatabase db)
-//    {
-//        _applications = db.GetCollection<Application>("Applications");
-//        _jobs = db.GetCollection<Job>("Jobs");
-//        _users = db.GetCollection<User>("Users");
-//    }
+namespace MigratedJobPortalAPI.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    public class ApplicationsController : ControllerBase
+    {
+        private readonly IMongoCollection<Application> _applicationCollection;
+        private readonly IMongoCollection<User> _userCollection;
+        private readonly IMongoCollection<Job> _jobCollection;
+        private readonly NotificationService _notificationService;
+        private readonly NotificationService _notificationsController;
 
-//    [HttpPost("apply")]
-//    public async Task<IActionResult> ApplyForJob([FromBody] ApplyRequest request)
-//    {
-//        if (string.IsNullOrEmpty(request.UserId) || string.IsNullOrEmpty(request.JobId))
-//            return BadRequest(new { message = "User ID and Job ID are required." });
 
-//        // Validate ObjectId format if needed
+        public ApplicationsController(MongoDbContext context, NotificationService notificationService)
+        {
+            _applicationCollection = context.Applications;
+            _userCollection = context.Users;
+            _jobCollection = context.Jobs;
+            _notificationService = notificationService;
+        }
 
-//        var user = await _users.Find(u => u.Id == request.UserId).FirstOrDefaultAsync();
-//        var job = await _jobs.Find(j => j.Id == request.JobId).FirstOrDefaultAsync();
+        [HttpPost("apply")]
+        public async Task<IActionResult> ApplyForJob([FromBody] ApplyRequest request)
+        {
+            Console.WriteLine($"[applyForJob] Request received: {request.UserId}, {request.JobId}");
 
-//        if (user == null)
-//            return NotFound(new { message = "User not found." });
-//        if (job == null)
-//            return NotFound(new { message = "Job not found." });
+            if (string.IsNullOrEmpty(request.UserId) || string.IsNullOrEmpty(request.JobId))
+                return BadRequest(new { message = "User ID and Job ID are required." });
 
-//        var existing = await _applications.Find(a => a.UserId == request.UserId && a.JobId == request.JobId).FirstOrDefaultAsync();
-//        if (existing != null)
-//            return Conflict(new { message = "You have already applied for this job." });
+            if (!ObjectId.TryParse(request.UserId, out _) || !ObjectId.TryParse(request.JobId, out _))
+                return BadRequest(new { message = "Invalid User ID or Job ID format." });
 
-//        var application = new Application
-//        {
-//            UserId = request.UserId,
-//            JobId = request.JobId,
-//            Employer = job.EmployerName,
-//            EmployerId = job.EmployerId,
-//            Status = "Applied"
-//        };
+            try
+            {
+                var user = await _userCollection.Find(u => u.Id == request.UserId).FirstOrDefaultAsync();
+                var job = await _jobCollection.Find(j => j.Id == request.JobId).FirstOrDefaultAsync();
 
-//        await _applications.InsertOneAsync(application);
-//        // TODO: changeApplicantCount(job.Id);
+                if (user == null)
+                    return NotFound(new { message = "User not found." });
 
-//        return Created("", new { message = "Application submitted successfully.", application });
-//    }
+                if (job == null)
+                    return NotFound(new { message = "Job not found." });
 
-//    [HttpGet("user/{userId}/applied")]
-//    public async Task<IActionResult> GetUserAppliedJobs(string userId, int page = 1, int limit = 5)
-//    {
-//        // Validate ObjectId format if needed
+                var application = new Application
+                {
+                    UserId = request.UserId,
+                    JobId = request.JobId,
+                    Employer = job.EmployerName,
+                    EmployerId = job.EmployerId,
+                };
 
-//        var totalApplications = await _applications.CountDocumentsAsync(a => a.UserId == userId);
-//        var applications = await _applications.Find(a => a.UserId == userId)
-//            .Skip((page - 1) * limit)
-//            .Limit(limit)
-//            .ToListAsync();
+                try
+                {
+                    await _applicationCollection.InsertOneAsync(application);
+                }
+                catch (MongoWriteException ex) when (ex.WriteError.Category == ServerErrorCategory.DuplicateKey)
+                {
+                    return Conflict(new { message = "You have already applied for this job." });
+                }
 
-//        // TODO: Populate job details if needed
+                await JobUtils.ChangeApplicantCount(_jobCollection, job.Id); // Increment count
 
-//        return Ok(new
-//        {
-//            currentPage = page,
-//            totalPages = (int)Math.Ceiling((double)totalApplications / limit),
-//            totalApplications,
-//            jobs = applications
-//        });
-//    }
+                return Created("", new { message = "Application submitted successfully.", application });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[applyForJob] Error: {ex}");
+                return StatusCode(500, new { message = "Internal server error." });
+            }
+        }
 
-//    [HttpPut("{applicationId}/status")]
-//    public async Task<IActionResult> UpdateApplicationStatus(string applicationId, [FromBody] StatusRequest request)
-//    {
-//        var validStatuses = new[] { "In Progress", "Accepted", "Rejected" };
-//        if (!validStatuses.Contains(request.Status))
-//            return BadRequest(new { message = "Invalid status value." });
+        [HttpGet("user/{userId}")]
+        public async Task<IActionResult> GetUserAppliedJobs(string userId, int page = 1, int limit = 5)
+        {
+            if (!ObjectId.TryParse(userId, out _))
+                return BadRequest(new { message = "Invalid User ID format." });
 
-//        var application = await _applications.Find(a => a.Id == applicationId).FirstOrDefaultAsync();
-//        if (application == null)
-//            return NotFound(new { message = "Application not found." });
+            try
+            {
+                var totalApplications = await _applicationCollection.CountDocumentsAsync(a => a.UserId == userId);
 
-//        if (application.Status == request.Status)
-//            return Ok(new { message = "Status is already up to date.", application });
+                var applications = await _applicationCollection.Find(a => a.UserId == userId)
+                    .Skip((page - 1) * limit)
+                    .Limit(limit)
+                    .ToListAsync();
 
-//        // TODO: Handle vacancy logic as in Node.js
+                var appliedJobs = new List<object>();
 
-//        application.Status = request.Status;
-//        await _applications.ReplaceOneAsync(a => a.Id == applicationId, application);
+                foreach (var app in applications)
+                {
+                    var job = await _jobCollection.Find(j => j.Id == app.JobId).FirstOrDefaultAsync();
+                    if (job != null)
+                    {
+                        appliedJobs.Add(new
+                        {
+                            applicationId = app.Id,
+                            job.Id,
+                            job.Title,
+                            job.Description,
+                            job.Location,
+                            app.Status
+                        });
+                    }
+                }
 
-//        // TODO: addNotification(application.UserId, ...);
+                return Ok(new
+                {
+                    currentPage = page,
+                    totalPages = (int)Math.Ceiling((double)totalApplications / limit),
+                    totalApplications,
+                    jobs = appliedJobs
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[getUserAppliedJobs] Error: {ex}");
+                return StatusCode(500, new { message = "Internal server error." });
+            }
+        }
 
-//        return Ok(new { message = "Application status updated and user notified.", application });
-//    }
+        [HttpPatch("{applicationId}/status")]
+        public async Task<IActionResult> UpdateApplicationStatus(string applicationId, [FromBody] UpdateStatusRequest req)
+        {
+            var validStatuses = new[] { "InProgress", "Accepted", "Rejected" };
 
-//    [HttpDelete("{applicationId}")]
-//    public async Task<IActionResult> RevokeApplication(string applicationId)
-//    {
-//        var application = await _applications.Find(a => a.Id == applicationId).FirstOrDefaultAsync();
-//        if (application == null)
-//            return NotFound(new { message = "Application not found" });
+            if (!ObjectId.TryParse(applicationId, out _))
+                return BadRequest(new { message = "Invalid application ID format." });
 
-//        // TODO: changeApplicantCount(application.JobId, 'dec');
-//        // TODO: If accepted, changeVacancyCount(application.JobId, 'inc');
+            if (!Enum.TryParse<ApplicationStatus>(req.Status, out var newStatus))
+                return BadRequest(new { message = "Invalid status value." });
 
-//        await _applications.DeleteOneAsync(a => a.Id == applicationId);
+            try
+            {
+                var application = await _applicationCollection.Find(a => a.Id == applicationId).FirstOrDefaultAsync();
+                if (application == null)
+                    return NotFound(new { message = "Application not found." });
 
-//        return Ok(new { message = "Application revoked successfully" });
-//    }
-//}
+                if (application.Status.ToString() == req.Status)
+                    return Ok(new { message = "Status is already up to date.", application });
 
-//// Request DTOs
-//public class ApplyRequest
-//{
-//    public string UserId { get; set; }
-//    public string JobId { get; set; }
-//}
+                var job = await _jobCollection.Find(j => j.Id == application.JobId).FirstOrDefaultAsync();
+                if (job == null)
+                    return NotFound(new { message = "Associated job not found." });
 
-//public class StatusRequest
-//{
-//    public string Status { get; set; }
-//}
+                if (application.Status != ApplicationStatus.Accepted && newStatus == ApplicationStatus.Accepted)
+                {
+                    if (job.Vacancies <= 0)
+                        return BadRequest(new { message = "No vacancies available for this job." });
+
+                    await JobUtils.ChangeVacancyCount(_jobCollection, job.Id, "dec");
+                }
+                else if (application.Status == ApplicationStatus.Accepted && newStatus != ApplicationStatus.Accepted)
+                {
+                    await JobUtils.ChangeVacancyCount(_jobCollection, job.Id, "inc");
+                }
+
+                application.Status = newStatus;
+                await _applicationCollection.ReplaceOneAsync(a => a.Id == applicationId, application);
+
+                await _notificationService.AddNotification(application.UserId, $"Your application for the job \"{job.Title}\" has been updated to '{req.Status}'.");
+
+                return Ok(new { message = "Application status updated and user notified.", application });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[updateApplicationStatus] Error: {ex}");
+                return StatusCode(500, new { message = "Internal server error." });
+            }
+        }
+
+        [HttpDelete("revoke/{applicationId}")]
+        public async Task<IActionResult> RevokeApplication(string applicationId)
+        {
+            if (!ObjectId.TryParse(applicationId, out _))
+                return BadRequest(new { message = "Invalid Application ID format." });
+
+            try
+            {
+                var application = await _applicationCollection.Find(a => a.Id == applicationId).FirstOrDefaultAsync();
+                if (application == null)
+                    return NotFound(new { message = "Application not found" });
+
+                await JobUtils.ChangeApplicantCount(_jobCollection, application.JobId, "dec");
+
+                if (application.Status == ApplicationStatus.Accepted)
+                    await JobUtils.ChangeVacancyCount(_jobCollection, application.JobId, "inc");
+
+                await _applicationCollection.DeleteOneAsync(a => a.Id == applicationId);
+
+                return Ok(new { message = "Application revoked successfully" });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[revokeApplication] Error: {ex}");
+                return StatusCode(500, new { message = "Internal server error" });
+            }
+        }
+    }
+
+    // DTOs
+    public class ApplyRequest
+    {
+        public string UserId { get; set; }
+        public string JobId { get; set; }
+    }
+
+    public class UpdateStatusRequest
+    {
+        public string Status { get; set; }
+    }
+}

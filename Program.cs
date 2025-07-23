@@ -8,6 +8,7 @@ using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Bson;
 using MigratedJobPortalAPI;
 using MongoDB.Driver;
+using MigratedJobPortalAPI.Services;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -66,6 +67,15 @@ builder.Services.AddSingleton<IMongoDatabase>(sp =>
     var databaseName = builder.Configuration["MongoDB:DatabaseName"];
     return client.GetDatabase(databaseName);
 });
+
+builder.Services.AddSingleton<NotificationService>(sp =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    var client = new MongoClient(builder.Configuration["MongoDB:ConnectionString"]);
+    var database = client.GetDatabase(builder.Configuration["MongoDB:DatabaseName"]);
+    return new NotificationService(database);
+});
+
 
 var app = builder.Build();
 

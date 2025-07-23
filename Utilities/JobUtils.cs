@@ -1,32 +1,23 @@
-﻿using System;
+﻿using MongoDB.Driver;
+using System;
 using System.Threading.Tasks;
-using MongoDB.Bson;
-using MongoDB.Driver;
 using MigratedJobPortalAPI.Models;
-using Microsoft.Extensions.Configuration;
 
 namespace MigratedJobPortalAPI.Utils
 {
     public class JobUtils
     {
-        private static IMongoCollection<Job> _jobCollection;
-
-        public JobUtils(IConfiguration configuration)
-        {
-            var client = new MongoClient(configuration["MongoDB:ConnectionString"]);
-            var database = client.GetDatabase(configuration["MongoDB:DatabaseName"]);
-            _jobCollection = database.GetCollection<Job>("Jobs");
-        }
-
-        public static async Task ChangeApplicantCount(string jobId, string action = "inc")
+        public static async Task ChangeApplicantCount(IMongoCollection<Job> jobCollection, string jobId, string action = "inc")
         {
             try
             {
-                var objectId = new ObjectId(jobId);
-                var incrementValue = action == "dec" ? -1 : 1;
+                int incrementValue = action == "dec" ? -1 : 1;
 
                 var update = Builders<Job>.Update.Inc(j => j.ApplicantCount, incrementValue);
-                var result = await _jobCollection.UpdateOneAsync(j => j.Id == objectId.ToString(), update); // FIXED
+                var result = await jobCollection.UpdateOneAsync(
+                    j => j.Id == jobId,
+                    update
+                );
 
                 if (result.ModifiedCount == 0)
                 {
@@ -39,19 +30,21 @@ namespace MigratedJobPortalAPI.Utils
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[ChangeApplicantCount] Error: {ex.Message}");
+                Console.WriteLine($"[ChangeApplicantCount] Error {(action == "dec" ? "decrementing" : "incrementing")} applicantCount for job {jobId}: {ex}");
             }
         }
 
-        public static async Task ChangeVacancyCount(string jobId, string action = "inc")
+        public static async Task ChangeVacancyCount(IMongoCollection<Job> jobCollection, string jobId, string action = "inc")
         {
             try
             {
-                var objectId = new ObjectId(jobId);
-                var incrementValue = action == "dec" ? -1 : 1;
+                int incrementValue = action == "dec" ? -1 : 1;
 
                 var update = Builders<Job>.Update.Inc(j => j.Vacancies, incrementValue);
-                var result = await _jobCollection.UpdateOneAsync(j => j.Id == objectId.ToString(), update); // FIXED
+                var result = await jobCollection.UpdateOneAsync(
+                    j => j.Id == jobId,
+                    update
+                );
 
                 if (result.ModifiedCount == 0)
                 {
@@ -64,7 +57,7 @@ namespace MigratedJobPortalAPI.Utils
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[ChangeVacancyCount] Error: {ex.Message}");
+                Console.WriteLine($"[ChangeVacancyCount] Error {(action == "dec" ? "decrementing" : "incrementing")} vacancies for job {jobId}: {ex}");
             }
         }
     }

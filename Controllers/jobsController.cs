@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using MigratedJobPortalAPI.Utils;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -9,11 +10,14 @@ public class JobsController : ControllerBase
 {
     private readonly MongoDbContext _context;
     private readonly ILogger<JobsController> _logger;
+    private readonly JobUtils _jobUtils;
 
-    public JobsController(MongoDbContext context, ILogger<JobsController> logger)
+
+    public JobsController(MongoDbContext context, ILogger<JobsController> logger, JobUtils jobUtils)
     {
         _context = context;
         _logger = logger;
+        _jobUtils = jobUtils;
     }
 
     [HttpPost]
@@ -218,4 +222,5 @@ public class JobsController : ControllerBase
             }
         });
     }
+
 }
