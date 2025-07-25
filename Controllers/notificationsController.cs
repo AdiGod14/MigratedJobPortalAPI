@@ -29,7 +29,7 @@ namespace MigratedJobPortalAPI.Controllers
             var notification = new Notification
             {
                 UserId = userId,
-                Message = message
+                Message = message   
             };
 
             try

@@ -1,4 +1,5 @@
-﻿using MongoDB.Driver;
+﻿using MongoDB.Bson;
+using MongoDB.Driver;
 using MigratedJobPortalAPI.Models;
 using System;
 using System.Threading.Tasks;
@@ -14,22 +15,31 @@ namespace MigratedJobPortalAPI.Services
             _notificationCollection = database.GetCollection<Notification>("notifications");
         }
 
-        public async Task AddNotification(string userId, string message)
+        public async Task<bool> AddNotification(string userId, string message)
         {
+            if (!ObjectId.TryParse(userId, out _))
+            {
+                Console.WriteLine($"[NotificationService] Invalid user ID: {userId}");
+                return false;
+            }
+
             var notification = new Notification
             {
                 UserId = userId,
-                Message = message
+                Message = message,
+                CreatedAt = DateTime.UtcNow // Make sure your Notification model includes this field
             };
 
             try
             {
                 await _notificationCollection.InsertOneAsync(notification);
                 Console.WriteLine($"[NotificationService] Notification sent to user {userId}");
+                return true;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"[NotificationService] Failed to send notification to user {userId}: {ex.Message}");
+                return false;
             }
         }
     }

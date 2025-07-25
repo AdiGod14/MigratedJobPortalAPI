@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MigratedJobPortalAPI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5a49bf0a12e663676478a81168dcf6d31152c175")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+75e77fb07502ecdb5e2d162b67b29d70d16a1990")]
 [assembly: System.Reflection.AssemblyProductAttribute("MigratedJobPortalAPI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MigratedJobPortalAPI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

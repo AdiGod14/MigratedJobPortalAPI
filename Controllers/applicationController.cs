@@ -19,7 +19,6 @@ namespace MigratedJobPortalAPI.Controllers
         private readonly IMongoCollection<User> _userCollection;
         private readonly IMongoCollection<Job> _jobCollection;
         private readonly NotificationService _notificationService;
-        private readonly NotificationService _notificationsController;
 
 
         public ApplicationsController(MongoDbContext context, NotificationService notificationService)

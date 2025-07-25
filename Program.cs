@@ -9,6 +9,7 @@ using MongoDB.Bson;
 using MigratedJobPortalAPI;
 using MongoDB.Driver;
 using MigratedJobPortalAPI.Services;
+using MigratedJobPortalAPI.Utils;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -28,6 +29,7 @@ BsonSerializer.RegisterSerializer(
 
 // Read JWT settings from appsettings.json
 var jwtKey = builder.Configuration["Jwt:Key"];
+var jwtRefreshKey = builder.Configuration["Jwt:RefreshKey"];
 var jwtIssuer = builder.Configuration["Jwt:Issuer"];
 
 // Add services to the container
@@ -35,6 +37,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<MongoDbContext>();
+builder.Services.AddSingleton<JobUtils>();
 
 // Configure JWT authentication
 builder.Services.AddAuthentication(options =>
@@ -76,6 +79,17 @@ builder.Services.AddSingleton<NotificationService>(sp =>
     return new NotificationService(database);
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngularApp",
+        builder => builder
+            .WithOrigins("http://localhost:4200")
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials() // Optional, if you're using cookies or auth headers
+        );
+});
+
 
 var app = builder.Build();
 
@@ -85,6 +99,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+app.UseCors("AllowAngularApp");
 
 app.UseHttpsRedirection();
 
