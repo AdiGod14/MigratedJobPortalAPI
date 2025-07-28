@@ -631,10 +631,10 @@
         }
       }
     },
-    "/api/UserEmployer/user": {
+    "/api/UsersAndEmployers/addUser": {
       "post": {
         "tags": [
-          "UserEmployer"
+          "UsersAndEmployers"
         ],
         "requestBody": {
           "content": {
@@ -662,10 +662,10 @@
         }
       }
     },
-    "/api/UserEmployer/user/{userId}": {
+    "/api/UsersAndEmployers/getUser/{userId}": {
       "get": {
         "tags": [
-          "UserEmployer"
+          "UsersAndEmployers"
         ],
         "parameters": [
           {
@@ -682,10 +682,12 @@
             "description": "OK"
           }
         }
-      },
+      }
+    },
+    "/api/UsersAndEmployers/updateUser/{userId}": {
       "put": {
         "tags": [
-          "UserEmployer"
+          "UsersAndEmployers"
         ],
         "parameters": [
           {
@@ -721,10 +723,12 @@
             "description": "OK"
           }
         }
-      },
+      }
+    },
+    "/api/UsersAndEmployers/deleteUser/{userId}": {
       "delete": {
         "tags": [
-          "UserEmployer"
+          "UsersAndEmployers"
         ],
         "parameters": [
           {
@@ -743,10 +747,10 @@
         }
       }
     },
-    "/api/UserEmployer/employer": {
+    "/api/UsersAndEmployers/addEmployer": {
       "post": {
         "tags": [
-          "UserEmployer"
+          "UsersAndEmployers"
         ],
         "requestBody": {
           "content": {
@@ -774,10 +778,10 @@
         }
       }
     },
-    "/api/UserEmployer/employer/{employerId}": {
+    "/api/UsersAndEmployers/getEmployer/{employerId}": {
       "get": {
         "tags": [
-          "UserEmployer"
+          "UsersAndEmployers"
         ],
         "parameters": [
           {
@@ -794,10 +798,12 @@
             "description": "OK"
           }
         }
-      },
+      }
+    },
+    "/api/UsersAndEmployers/updateEmployer/{employerId}": {
       "put": {
         "tags": [
-          "UserEmployer"
+          "UsersAndEmployers"
         ],
         "parameters": [
           {
@@ -833,10 +839,12 @@
             "description": "OK"
           }
         }
-      },
+      }
+    },
+    "/api/UsersAndEmployers/deleteEmployer/{employerId}": {
       "delete": {
         "tags": [
-          "UserEmployer"
+          "UsersAndEmployers"
         ],
         "parameters": [
           {

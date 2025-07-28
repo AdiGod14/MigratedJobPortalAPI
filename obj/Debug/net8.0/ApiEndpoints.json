@@ -400,9 +400,9 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "MigratedJobPortalAPI.Controllers.UserEmployerController",
+    "ContainingType": "MigratedJobPortalAPI.Controllers.UsersAndEmployersController",
     "Method": "AddEmployer",
-    "RelativePath": "api/UserEmployer/employer",
+    "RelativePath": "api/UsersAndEmployers/addEmployer",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
@@ -416,62 +416,9 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "MigratedJobPortalAPI.Controllers.UserEmployerController",
-    "Method": "GetEmployerData",
-    "RelativePath": "api/UserEmployer/employer/{employerId}",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "employerId",
-        "Type": "System.String",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "MigratedJobPortalAPI.Controllers.UserEmployerController",
-    "Method": "UpdateEmployerData",
-    "RelativePath": "api/UserEmployer/employer/{employerId}",
-    "HttpMethod": "PUT",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "employerId",
-        "Type": "System.String",
-        "IsRequired": true
-      },
-      {
-        "Name": "updatedEmployer",
-        "Type": "MigratedJobPortalAPI.Models.Employer",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "MigratedJobPortalAPI.Controllers.UserEmployerController",
-    "Method": "DeleteEmployer",
-    "RelativePath": "api/UserEmployer/employer/{employerId}",
-    "HttpMethod": "DELETE",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "employerId",
-        "Type": "System.String",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "MigratedJobPortalAPI.Controllers.UserEmployerController",
+    "ContainingType": "MigratedJobPortalAPI.Controllers.UsersAndEmployersController",
     "Method": "AddUser",
-    "RelativePath": "api/UserEmployer/user",
+    "RelativePath": "api/UsersAndEmployers/addUser",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
@@ -485,9 +432,57 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "MigratedJobPortalAPI.Controllers.UserEmployerController",
+    "ContainingType": "MigratedJobPortalAPI.Controllers.UsersAndEmployersController",
+    "Method": "DeleteEmployerData",
+    "RelativePath": "api/UsersAndEmployers/deleteEmployer/{employerId}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "employerId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "MigratedJobPortalAPI.Controllers.UsersAndEmployersController",
+    "Method": "DeleteUserData",
+    "RelativePath": "api/UsersAndEmployers/deleteUser/{userId}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "MigratedJobPortalAPI.Controllers.UsersAndEmployersController",
+    "Method": "GetEmployerData",
+    "RelativePath": "api/UsersAndEmployers/getEmployer/{employerId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "employerId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "MigratedJobPortalAPI.Controllers.UsersAndEmployersController",
     "Method": "GetUserData",
-    "RelativePath": "api/UserEmployer/user/{userId}",
+    "RelativePath": "api/UsersAndEmployers/getUser/{userId}",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
@@ -501,9 +496,30 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "MigratedJobPortalAPI.Controllers.UserEmployerController",
+    "ContainingType": "MigratedJobPortalAPI.Controllers.UsersAndEmployersController",
+    "Method": "UpdateEmployerData",
+    "RelativePath": "api/UsersAndEmployers/updateEmployer/{employerId}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "employerId",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "updatedData",
+        "Type": "MigratedJobPortalAPI.Models.Employer",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "MigratedJobPortalAPI.Controllers.UsersAndEmployersController",
     "Method": "UpdateUserData",
-    "RelativePath": "api/UserEmployer/user/{userId}",
+    "RelativePath": "api/UsersAndEmployers/updateUser/{userId}",
     "HttpMethod": "PUT",
     "IsController": true,
     "Order": 0,
@@ -514,24 +530,8 @@
         "IsRequired": true
       },
       {
-        "Name": "updatedUser",
+        "Name": "updatedData",
         "Type": "MigratedJobPortalAPI.Models.User",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "MigratedJobPortalAPI.Controllers.UserEmployerController",
-    "Method": "DeleteUser",
-    "RelativePath": "api/UserEmployer/user/{userId}",
-    "HttpMethod": "DELETE",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "userId",
-        "Type": "System.String",
         "IsRequired": true
       }
     ],
