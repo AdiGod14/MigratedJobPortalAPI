@@ -5,6 +5,7 @@ using MigratedJobPortalAPI.Models;
 using BCrypt.Net;
 using System;
 using System.Threading.Tasks;
+using Microsoft.IdentityModel.Tokens;
 
 namespace MigratedJobPortalAPI.Controllers
 {
@@ -66,16 +67,69 @@ namespace MigratedJobPortalAPI.Controllers
             return Ok(new { message = "User data retrieved successfully", user });
         }
 
-        [HttpPut("updateUser/{userId}")]
-        public async Task<IActionResult> UpdateUserData(string userId, [FromBody] User updatedData)
+        //[HttpPut("updateUser/{userId}")]
+        //public async Task<IActionResult> UpdateUserData(string userId, [FromBody] User updatedData)
+        //{
+        //    if (string.IsNullOrEmpty(userId))
+        //        return BadRequest(new { message = "User ID is required" });
+
+        //    if (!string.IsNullOrEmpty(updatedData.Password))
+        //        updatedData.Password = BCrypt.Net.BCrypt.HashPassword(updatedData.Password, SALT_ROUNDS);
+
+        //    var result = await _users.FindOneAndReplaceAsync(u => u.Id == userId, updatedData, new FindOneAndReplaceOptions<User> { ReturnDocument = ReturnDocument.After });
+
+        //    if (result == null)
+        //        return NotFound(new { message = "User not found" });
+
+        //    result.Password = null;
+        //    return Ok(new { message = "User updated successfully", user = result });
+        //}
+
+        [HttpPatch("updateUser/{userId}")]
+        public async Task<IActionResult> PatchUserData(string userId, [FromBody] UpdateUserDto updatedData)
         {
             if (string.IsNullOrEmpty(userId))
                 return BadRequest(new { message = "User ID is required" });
 
-            if (!string.IsNullOrEmpty(updatedData.Password))
-                updatedData.Password = BCrypt.Net.BCrypt.HashPassword(updatedData.Password, SALT_ROUNDS);
+            var updates = new List<UpdateDefinition<User>>();
 
-            var result = await _users.FindOneAndReplaceAsync(u => u.Id == userId, updatedData, new FindOneAndReplaceOptions<User> { ReturnDocument = ReturnDocument.After });
+            if (!string.IsNullOrEmpty(updatedData.Name))
+                updates.Add(Builders<User>.Update.Set(u => u.Name, updatedData.Name));
+
+            if (!string.IsNullOrEmpty(updatedData.Email))
+                updates.Add(Builders<User>.Update.Set(u => u.Email, updatedData.Email));
+
+            if (!string.IsNullOrEmpty(updatedData.Phone))
+                updates.Add(Builders<User>.Update.Set(u => u.Phone, updatedData.Phone));
+
+            if (!string.IsNullOrEmpty(updatedData.Address))
+                updates.Add(Builders<User>.Update.Set(u => u.Address, updatedData.Address));
+
+            if (updatedData.ProfilePicture != null)
+                updates.Add(Builders<User>.Update.Set(u => u.ProfilePicture, updatedData.ProfilePicture));
+
+            if (!string.IsNullOrEmpty(updatedData.PreferredDomain))
+                updates.Add(Builders<User>.Update.Set(u => u.PreferredDomain, updatedData.PreferredDomain));
+
+            if (updatedData.Experience.HasValue)
+                updates.Add(Builders<User>.Update.Set(u => u.Experience, updatedData.Experience.Value));
+
+            if (!string.IsNullOrEmpty(updatedData.Password))
+            {
+                var hashedPassword = BCrypt.Net.BCrypt.HashPassword(updatedData.Password, SALT_ROUNDS);
+                updates.Add(Builders<User>.Update.Set(u => u.Password, hashedPassword));
+            }
+
+            if (!updates.Any())
+                return BadRequest(new { message = "No valid fields provided for update" });
+
+            var updateDef = Builders<User>.Update.Combine(updates);
+
+            var result = await _users.FindOneAndUpdateAsync(
+                u => u.Id == userId,
+                updateDef,
+                new FindOneAndUpdateOptions<User> { ReturnDocument = ReturnDocument.After }
+            );
 
             if (result == null)
                 return NotFound(new { message = "User not found" });
@@ -83,6 +137,9 @@ namespace MigratedJobPortalAPI.Controllers
             result.Password = null;
             return Ok(new { message = "User updated successfully", user = result });
         }
+
+
+
 
         [HttpDelete("deleteUser/{userId}")]
         public async Task<IActionResult> DeleteUserData(string userId)
@@ -179,4 +236,17 @@ namespace MigratedJobPortalAPI.Controllers
             });
         }
     }
+    public class UpdateUserDto
+    {
+        public string? Name { get; set; }
+        public string? Email { get; set; }
+        public string? Phone { get; set; }
+        public string? Address { get; set; }
+        public string? PreferredDomain { get; set; }
+        public int? Experience { get; set; }
+        public ProfilePicture? ProfilePicture { get; set; }
+        public Resume? Resume { get; set; }
+        public string? Password { get; set; }
+    }
+
 }

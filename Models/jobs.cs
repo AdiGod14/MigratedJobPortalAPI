@@ -25,7 +25,7 @@ namespace MigratedJobPortalAPI.Models
         public string Domain { get; set; }
 
         [BsonElement("description")]
-        public JobDescription Description { get; set; }
+        public JobDescription Description { get; set; } = new();
 
         [BsonElement("company")]
         public string Company { get; set; }
@@ -61,18 +61,19 @@ namespace MigratedJobPortalAPI.Models
     public class JobDescription
     {
         [BsonElement("overview")]
-        public string Overview { get; set; }
+        public string Overview { get; set; } = string.Empty;
 
         [BsonElement("responsibilities")]
-        public List<string> Responsibilities { get; set; }
+        public List<string> Responsibilities { get; set; } = new();
 
         [BsonElement("requiredSkills")]
-        public List<string> RequiredSkills { get; set; }
+        public List<string> RequiredSkills { get; set; } = new();
 
         [BsonElement("preferredSkills")]
-        public List<string> PreferredSkills { get; set; }
+        public List<string> PreferredSkills { get; set; } = new();
 
         [BsonElement("whatWeOffer")]
-        public List<string> WhatWeOffer { get; set; }
+        public List<string> WhatWeOffer { get; set; } = new();
     }
+
 }

@@ -407,7 +407,7 @@
         }
       }
     },
-    "/api/Jobs/search": {
+    "/api/Jobs/searchJobs": {
       "get": {
         "tags": [
           "Jobs"
@@ -685,7 +685,7 @@
       }
     },
     "/api/UsersAndEmployers/updateUser/{userId}": {
-      "put": {
+      "patch": {
         "tags": [
           "UsersAndEmployers"
         ],
@@ -703,17 +703,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/User"
+                "$ref": "#/components/schemas/UpdateUserDto"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/User"
+                "$ref": "#/components/schemas/UpdateUserDto"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/User"
+                "$ref": "#/components/schemas/UpdateUserDto"
               }
             }
           }
@@ -1097,6 +1097,47 @@
         "type": "object",
         "properties": {
           "status": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateUserDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "address": {
+            "type": "string",
+            "nullable": true
+          },
+          "preferredDomain": {
+            "type": "string",
+            "nullable": true
+          },
+          "experience": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "profilePicture": {
+            "$ref": "#/components/schemas/ProfilePicture"
+          },
+          "resume": {
+            "$ref": "#/components/schemas/Resume"
+          },
+          "password": {
             "type": "string",
             "nullable": true
           }

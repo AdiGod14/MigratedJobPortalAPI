@@ -106,8 +106,15 @@ namespace MigratedJobPortalAPI.Controllers
                             applicationId = app.Id,
                             job.Id,
                             job.Title,
+                            job.ApplicantCount,
+                            job.Salary,
+                            job.Company,
+                            job.Vacancies,
+                            job.CreatedAt,
+                            job.Type,
                             job.Description,
                             job.Location,
+                            job.EmployerName,
                             app.Status
                         });
                     }

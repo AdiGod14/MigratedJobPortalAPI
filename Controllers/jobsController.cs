@@ -64,11 +64,23 @@ public class JobsController : ControllerBase
     }
 
     [HttpPut("{jobId}")]
+
     public async Task<IActionResult> UpdateJob(string jobId, [FromBody] Job update)
     {
         _logger.LogInformation("[UpdateJob] jobId: {JobId}", jobId);
 
-        var updateDef = Builders<Job>.Update.Set(j => j.Title, update.Title); // Extend this with all updatable fields
+        var updateDef = Builders<Job>.Update
+            .Set(j => j.Title, update.Title)
+            .Set(j => j.Description, update.Description)
+            .Set(j => j.Company, update.Company)
+            .Set(j => j.Location, update.Location)
+            .Set(j => j.Salary, update.Salary)
+            .Set(j => j.Type, update.Type)
+            .Set(j => j.Vacancies, update.Vacancies)
+            .Set(j => j.Experience, update.Experience)
+            .Set(j => j.Domain, update.Domain)
+            .Set(j => j.UpdatedAt, DateTime.UtcNow);
+
         var result = await _context.Jobs.UpdateOneAsync(j => j.Id == jobId, updateDef);
 
         if (result.MatchedCount == 0)
@@ -76,6 +88,7 @@ public class JobsController : ControllerBase
 
         return Ok(new { message = "Job updated successfully" });
     }
+
 
     [HttpDelete("{jobId}")]
     public async Task<IActionResult> DeleteJob(string jobId)
@@ -148,10 +161,28 @@ public class JobsController : ControllerBase
             .SortByDescending(a => a.AppliedAt)
             .ToListAsync();
 
-        return Ok(new { job, applicants = applications });
+        var enrichedApplicants = new List<object>();
+        foreach (var app in applications)
+        {
+            var user = await _context.Users
+                .Find(u => u.Id == app.UserId)
+                .FirstOrDefaultAsync();
+
+            enrichedApplicants.Add(new
+            {
+                _id = app.Id,
+                jobId = app.JobId,
+                status = app.Status,
+                appliedAt = app.AppliedAt,
+                userId = user // now Angular gets full user info
+            });
+        }
+
+        return Ok(new { job, applicants = enrichedApplicants });
     }
 
-    [HttpGet("search")]
+
+    [HttpGet("searchJobs")]
     public async Task<IActionResult> SearchJobsForUsers(
         string? domain,
         string? preferredDomain,

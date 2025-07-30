@@ -240,7 +240,7 @@
   {
     "ContainingType": "JobsController",
     "Method": "SearchJobsForUsers",
-    "RelativePath": "api/Jobs/search",
+    "RelativePath": "api/Jobs/searchJobs",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
@@ -518,9 +518,9 @@
   },
   {
     "ContainingType": "MigratedJobPortalAPI.Controllers.UsersAndEmployersController",
-    "Method": "UpdateUserData",
+    "Method": "PatchUserData",
     "RelativePath": "api/UsersAndEmployers/updateUser/{userId}",
-    "HttpMethod": "PUT",
+    "HttpMethod": "PATCH",
     "IsController": true,
     "Order": 0,
     "Parameters": [
@@ -531,7 +531,7 @@
       },
       {
         "Name": "updatedData",
-        "Type": "MigratedJobPortalAPI.Models.User",
+        "Type": "MigratedJobPortalAPI.Controllers.UpdateUserDto",
         "IsRequired": true
       }
     ],
